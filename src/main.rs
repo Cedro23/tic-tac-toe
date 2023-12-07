@@ -82,10 +82,16 @@ fn player_move(board: &Vec<char>) -> usize {
 //Random AI moves
 fn ai_move(board: &Vec<char>, ai: &char) -> usize {
     let maximasing = ai == &'X';
-    return minimax(&board, 2, maximasing).position;
+    return minimax(&board, 2, isize::MIN, isize::MAX, maximasing).position;
 }
 
-fn minimax(board: &Vec<char>, depth: usize, maximizing_player: bool) -> MinimaxResult {
+fn minimax(
+    board: &Vec<char>,
+    depth: usize,
+    alpha: isize,
+    beta: isize,
+    maximizing_player: bool,
+) -> MinimaxResult {
     if depth == 0 || check_game_over(&board) {
         return MinimaxResult {
             position: 0,
@@ -99,10 +105,14 @@ fn minimax(board: &Vec<char>, depth: usize, maximizing_player: bool) -> MinimaxR
 
         for child in get_position_children(&board, 'X') {
             // Do something with each child position
-            let result = minimax(&child.child, depth - 1, false);
+            let result = minimax(&child.child, depth - 1, alpha, beta, false);
             if result.eval > max_eval {
                 max_eval = result.eval;
                 position = child.position;
+            }
+            let alpha = alpha.max(result.eval);
+            if beta <= alpha {
+                break;
             }
         }
         return MinimaxResult {
@@ -115,10 +125,14 @@ fn minimax(board: &Vec<char>, depth: usize, maximizing_player: bool) -> MinimaxR
 
         for child in get_position_children(&board, 'O') {
             // Do something with each child position
-            let result = minimax(&child.child, depth - 1, true);
+            let result = minimax(&child.child, depth - 1, alpha, beta, true);
             if result.eval < min_eval {
                 min_eval = result.eval;
                 position = child.position;
+            }
+            let beta: isize = beta.min(result.eval);
+            if beta <= alpha {
+                break;
             }
         }
         return MinimaxResult {
